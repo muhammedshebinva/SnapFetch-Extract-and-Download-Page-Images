@@ -1,6 +1,5 @@
 import React from 'react';
 
-// VIEW: Renders the format selection dropdown
 function FormatSelector({ format, onFormatChange, disabled }) {
   return (
     <div style={{ margin: '20px 0' }}>
@@ -17,6 +16,7 @@ function FormatSelector({ format, onFormatChange, disabled }) {
         <option value="jpg">JPEG</option>
         <option value="png">PNG</option>
         <option value="webp">WebP</option>
+        <option value="gif">GIF</option> {/* <-- ADD THIS OPTION */}
       </select>
     </div>
   );

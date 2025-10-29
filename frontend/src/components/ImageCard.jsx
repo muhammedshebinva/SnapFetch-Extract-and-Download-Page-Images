@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react'; // Import useState
 
-// VIEW: Renders a single image card
-// UPDATED: Now accepts 'format' prop
-function ImageCard({ imageUrl, format }) {
+// UPDATED: No longer accepts 'format' prop
+function ImageCard({ imageUrl }) {
   
-  // UPDATED: Pass both imageUrl and format to our backend
-  const downloadUrl = `http://localhost:4000/download?imageUrl=${encodeURIComponent(imageUrl)}&format=${format}`;
+  // NEW: This card now manages its own format state
+  const [cardFormat, setCardFormat] = useState('jpg');
+
+  // UPDATED: Uses its own 'cardFormat' state to build the URL
+  const downloadUrl = `http://localhost:4000/download?imageUrl=${encodeURIComponent(imageUrl)}&format=${cardFormat}`;
 
   return (
     <div style={{
@@ -22,9 +24,22 @@ function ImageCard({ imageUrl, format }) {
         style={{ width: '100%', height: '150px', objectFit: 'cover' }}
         onError={(e) => { e.target.src = 'https://via.placeholder.com/200x150?text=Image+Not+Found'; }}
       />
+
+      {/* NEW: Individual format selector for this card */}
+      <select 
+        value={cardFormat}
+        onChange={(e) => setCardFormat(e.target.value)}
+        style={{ width: '100%', padding: '5px', marginTop: '10px' }}
+      >
+        <option value="jpg">JPEG</option>
+        <option value="png">PNG</option>
+        <option value="webp">WebP</option>
+        <option value="gif">GIF</option>
+      </select>
+
       <a
         href={downloadUrl}
-        download // This tells the browser to download, server confirms
+        download
         style={{
           display: 'block',
           marginTop: '10px',
@@ -35,7 +50,8 @@ function ImageCard({ imageUrl, format }) {
           borderRadius: '4px'
         }}
       >
-        Download as {format.toUpperCase()}
+        {/* UPDATED: Uses local state for the button text */}
+        Download as {cardFormat.toUpperCase()}
       </a>
     </div>
   );

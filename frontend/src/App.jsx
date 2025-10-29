@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import UrlForm from './components/UrlForm';
 import ImageGrid from './components/ImageGrid';
-import FormatSelector from './components/FormatSelector'; // NEW: Import
+import FormatSelector from './components/FormatSelector';
 import './App.css';
 
 function App() {
@@ -10,7 +10,9 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState(null);
-  const [format, setFormat] = useState('jpg'); // NEW: State for format
+  
+  // UPDATED: Renamed state to be more specific
+  const [downloadAllFormat, setDownloadAllFormat] = useState('jpg');
 
   // CONTROLLER: Logic for scrape (no change)
   const handleScrape = async (targetUrl) => {
@@ -43,10 +45,10 @@ function App() {
       const response = await fetch('http://localhost:4000/download-all', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // UPDATED: Send the format along with the image URLs
         body: JSON.stringify({ 
           imageUrls: images, 
-          format: format 
+          // UPDATED: Use the renamed state variable
+          format: downloadAllFormat 
         }),
       });
 
@@ -58,7 +60,8 @@ function App() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `images-${format}.zip`; // NEW: Add format to zip name
+      // UPDATED: Use the renamed state variable
+      a.download = `images-${downloadAllFormat}.zip`; 
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -80,16 +83,7 @@ function App() {
         <p>Paste a URL to pull all images from the page.</p>
       </header>
 
-      {/* Pass loading state to disable form */}
       <UrlForm onScrape={handleScrape} isLoading={isLoading || isDownloading} />
-
-      {/* NEW: Format Selector */}
-      {/* Pass loading state to disable selection */}
-      <FormatSelector 
-        format={format} 
-        onFormatChange={setFormat} 
-        disabled={isLoading || isDownloading} 
-      />
       
       {error && (
         <div style={{ color: 'red', margin: '20px' }}>
@@ -97,21 +91,36 @@ function App() {
         </div>
       )}
 
-      {/* "Download All" Button (UPDATED) */}
+      {/* This section now ONLY controls the "Download All" button */}
       {images.length > 0 && !isLoading && (
-        <div style={{ margin: '20px 0' }}>
+        <div style={{ 
+            margin: '20px 0', 
+            padding: '15px', 
+            border: '1px solid #eee', 
+            borderRadius: '8px' 
+        }}>
+          <h3>Download All Options</h3>
+          
+          {/* UPDATED: Pass renamed state and handler */}
+          <FormatSelector 
+            format={downloadAllFormat} 
+            onFormatChange={setDownloadAllFormat} 
+            disabled={isDownloading} 
+          />
+          
           <button 
             onClick={handleDownloadAll} 
             disabled={isDownloading}
             style={{ padding: '10px 15px', fontSize: '16px', cursor: 'pointer' }}
           >
-            {isDownloading ? 'Zipping...' : `Download All as ${format.toUpperCase()}`}
+            {/* UPDATED: Use renamed state variable */}
+            {isDownloading ? 'Zipping...' : `Download All as ${downloadAllFormat.toUpperCase()}`}
           </button>
         </div>
       )}
 
-      {/* UPDATED: Pass format to the grid */}
-      <ImageGrid images={images} format={format} />
+      {/* UPDATED: No longer passes 'format' prop */}
+      <ImageGrid images={images} />
     </div>
   );
 }

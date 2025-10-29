@@ -1,9 +1,8 @@
 import React from 'react';
 import ImageCard from './ImageCard';
 
-// VIEW: Renders the grid of images
-// UPDATED: Now accepts 'format' prop
-function ImageGrid({ images, format }) {
+// UPDATED: No longer accepts 'format' prop
+function ImageGrid({ images }) {
   return (
     <div style={{
       display: 'flex',
@@ -11,8 +10,8 @@ function ImageGrid({ images, format }) {
       justifyContent: 'center',
     }}>
       {images.map((img, index) => (
-        // UPDATED: Pass format to ImageCard
-        <ImageCard key={index} imageUrl={img} format={format} />
+        // UPDATED: No longer passes format to ImageCard
+        <ImageCard key={index} imageUrl={img} />
       ))}
     </div>
   );

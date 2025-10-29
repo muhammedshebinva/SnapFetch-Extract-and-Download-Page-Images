@@ -1,84 +1,22 @@
-// import React, { useState } from 'react';
-// import UrlForm from './components/UrlForm';
-// import ImageGrid from './components/ImageGrid';
-// //import './App.css'; // You can keep the default styling
-
-// // This component acts as the main VIEW and CONTROLLER
-// function App() {
-//   // MODEL: Application state
-//   const [images, setImages] = useState([]);
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [error, setError] = useState(null);
-
-//   // CONTROLLER: Logic to handle the scrape request
-//   const handleScrape = async (targetUrl) => {
-//     setIsLoading(true);
-//     setError(null);
-//     setImages([]); // Clear previous images
-
-//     try {
-//       // Talk to our backend, not the target site
-//       const response = await fetch(`http://localhost:4000/scrape?targetUrl=${encodeURIComponent(targetUrl)}`);
-      
-//       if (!response.ok) {
-//         const errData = await response.json();
-//         throw new Error(errData.error || 'Something went wrong');
-//       }
-
-//       const data = await response.json();
-      
-//       // MODEL: Update state
-//       setImages(data.images);
-      
-//     } catch (err) {
-//       console.error(err);
-//       setError(err.message);
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   };
-
-//   // VIEW: Render the main application
-//   return (
-//     <div className="App" style={{ padding: '20px' }}>
-//       <header>
-//         <h1>Image Scraper</h1>
-//         <p>Paste a URL to pull all images from the page.</p>
-//       </header>
-//       <UrlForm onScrape={handleScrape} isLoading={isLoading} />
-      
-//       {error && (
-//         <div style={{ color: 'red', margin: '20px' }}>
-//           <strong>Error:</strong> {error}
-//         </div>
-//       )}
-
-//       <ImageGrid images={images} />
-//     </div>
-//   );
-// }
-
-// export default App;
-
 import React, { useState } from 'react';
 import UrlForm from './components/UrlForm';
 import ImageGrid from './components/ImageGrid';
+import FormatSelector from './components/FormatSelector'; // NEW: Import
 import './App.css';
 
-// This component acts as the main VIEW and CONTROLLER
 function App() {
   // MODEL: Application state
   const [images, setImages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false); // NEW state
+  const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState(null);
+  const [format, setFormat] = useState('jpg'); // NEW: State for format
 
-  // CONTROLLER: Logic to handle the scrape request
+  // CONTROLLER: Logic for scrape (no change)
   const handleScrape = async (targetUrl) => {
     setIsLoading(true);
     setError(null);
     setImages([]);
-
     try {
       const response = await fetch(`http://localhost:4000/scrape?targetUrl=${encodeURIComponent(targetUrl)}`);
       if (!response.ok) {
@@ -95,38 +33,34 @@ function App() {
     }
   };
 
-  // ### NEW CONTROLLER: Logic to handle "Download All" ###
+  // CONTROLLER: Logic for "Download All" (UPDATED)
   const handleDownloadAll = async () => {
     if (images.length === 0) return;
-
     setIsDownloading(true);
     setError(null);
 
     try {
       const response = await fetch('http://localhost:4000/download-all', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ imageUrls: images }),
+        headers: { 'Content-Type': 'application/json' },
+        // UPDATED: Send the format along with the image URLs
+        body: JSON.stringify({ 
+          imageUrls: images, 
+          format: format 
+        }),
       });
 
       if (!response.ok) {
         throw new Error('Failed to create zip file on server');
       }
 
-      // Get the zip file as a blob
       const blob = await response.blob();
-
-      // Create a temporary link to trigger the download
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'images.zip'; // The filename for the user
+      a.download = `images-${format}.zip`; // NEW: Add format to zip name
       document.body.appendChild(a);
       a.click();
-      
-      // Clean up the temporary link
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
@@ -138,7 +72,6 @@ function App() {
     }
   };
 
-
   // VIEW: Render the main application
   return (
     <div className="App" style={{ padding: '20px' }}>
@@ -146,7 +79,17 @@ function App() {
         <h1>Image Scraper</h1>
         <p>Paste a URL to pull all images from the page.</p>
       </header>
-      <UrlForm onScrape={handleScrape} isLoading={isLoading} />
+
+      {/* Pass loading state to disable form */}
+      <UrlForm onScrape={handleScrape} isLoading={isLoading || isDownloading} />
+
+      {/* NEW: Format Selector */}
+      {/* Pass loading state to disable selection */}
+      <FormatSelector 
+        format={format} 
+        onFormatChange={setFormat} 
+        disabled={isLoading || isDownloading} 
+      />
       
       {error && (
         <div style={{ color: 'red', margin: '20px' }}>
@@ -154,7 +97,7 @@ function App() {
         </div>
       )}
 
-      {/* ### NEW: Download All Button ### */}
+      {/* "Download All" Button (UPDATED) */}
       {images.length > 0 && !isLoading && (
         <div style={{ margin: '20px 0' }}>
           <button 
@@ -162,12 +105,13 @@ function App() {
             disabled={isDownloading}
             style={{ padding: '10px 15px', fontSize: '16px', cursor: 'pointer' }}
           >
-            {isDownloading ? 'Zipping...' : 'Download All as ZIP'}
+            {isDownloading ? 'Zipping...' : `Download All as ${format.toUpperCase()}`}
           </button>
         </div>
       )}
 
-      <ImageGrid images={images} />
+      {/* UPDATED: Pass format to the grid */}
+      <ImageGrid images={images} format={format} />
     </div>
   );
 }

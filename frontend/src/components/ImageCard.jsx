@@ -1,9 +1,11 @@
 import React from 'react';
 
 // VIEW: Renders a single image card
-function ImageCard({ imageUrl }) {
-  // This URL points to our backend's /download endpoint
-  const downloadUrl = `http://localhost:4000/download?imageUrl=${encodeURIComponent(imageUrl)}`;
+// UPDATED: Now accepts 'format' prop
+function ImageCard({ imageUrl, format }) {
+  
+  // UPDATED: Pass both imageUrl and format to our backend
+  const downloadUrl = `http://localhost:4000/download?imageUrl=${encodeURIComponent(imageUrl)}&format=${format}`;
 
   return (
     <div style={{
@@ -18,12 +20,11 @@ function ImageCard({ imageUrl }) {
         src={imageUrl}
         alt="Scraped content"
         style={{ width: '100%', height: '150px', objectFit: 'cover' }}
-        // Handle images that fail to load
         onError={(e) => { e.target.src = 'https://via.placeholder.com/200x150?text=Image+Not+Found'; }}
       />
       <a
         href={downloadUrl}
-        download // The 'download' attribute is handled by our server
+        download // This tells the browser to download, server confirms
         style={{
           display: 'block',
           marginTop: '10px',
@@ -34,7 +35,7 @@ function ImageCard({ imageUrl }) {
           borderRadius: '4px'
         }}
       >
-        Download
+        Download as {format.toUpperCase()}
       </a>
     </div>
   );
